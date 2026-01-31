@@ -21,8 +21,15 @@
   </style>
 </head>
 <body>
-  <video autoplay muted loop playsinline>
-    <source src="./vegeta-ultra-ego.mp4" type="video/mp4" />
+  <video id="bg" muted loop playsinline preload="auto">
+    <source src="./dark-queen-knight.mp4" type="video/mp4" />
   </video>
+
+  <script>
+    window.addEventListener('load', () => {
+      const video = document.getElementById('bg');
+      video.play();
+    });
+  </script>
 </body>
 </html>
