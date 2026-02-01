@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wallpaper</title>
+  <title>YouTube Wallpaper</title>
+
   <style>
     html, body {
       margin: 0;
@@ -12,109 +13,61 @@
       background: black;
       overflow: hidden;
     }
-    video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      display: block;
 
-      /* hide until stable playback starts */
-      opacity: 0;
-      transition: opacity .25s ease;
+    /* Container that behaves like object-fit: cover */
+    .bg {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: black;
     }
-    video.ready {
-      opacity: 1;
+
+    /* Oversized iframe to fully cover viewport */
+    .bg iframe {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 177.78vh;       /* 16 / 9 * 100vh */
+      height: 100vh;
+      min-width: 100vw;
+      min-height: 56.25vw;   /* 9 / 16 * 100vw */
+      border: 0;
+      pointer-events: none; /* prevent clicks opening YouTube */
+    }
+
+    /* Optional dark overlay */
+    .shade {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.1);
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
-  <video
-    id="bg"
-    muted
-    loop
-    playsinline
-    preload="auto"
-  >
-    <source src="https://mylivewallpapers.com/wp-content/uploads/Anime/PREVIEW-Sung-Jinwoo-Demon-Solo-Leveling.mp4" type="video/mp4" />
-  </video>
 
-  <script>
-    const video = document.getElementById('bg');
+  <div class="bg">
+    <iframe
+      title="YouTube background"
+      src="https://www.youtube-nocookie.com/embed/B6ZrAaGpsNI
+        ?autoplay=1
+        &mute=1
+        &controls=0
+        &playsinline=1
+        &loop=1
+        &playlist=B6ZrAaGpsNI
+        &modestbranding=1
+        &rel=0
+        &iv_load_policy=3
+        &disablekb=1"
+      allow="autoplay; encrypted-media; picture-in-picture"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen>
+    </iframe>
+  </div>
 
-    // How much buffered time (seconds) we want before starting / resuming
-    const MIN_BUFFER_SECONDS = 5;
+  <div class="shade"></div>
 
-    // Prevent rapid play/pause loops on bad connections
-    let waitingForBuffer = false;
-
-    function bufferedAheadSeconds(v) {
-      try {
-        if (!v.buffered || v.buffered.length === 0) return 0;
-
-        // Find buffered range that contains currentTime
-        const t = v.currentTime;
-        for (let i = 0; i < v.buffered.length; i++) {
-          const start = v.buffered.start(i);
-          const end = v.buffered.end(i);
-          if (t >= start && t <= end) return Math.max(0, end - t);
-        }
-
-        // If currentTime isn't inside a range, use the first range as fallback
-        return Math.max(0, v.buffered.end(0) - t);
-      } catch {
-        return 0;
-      }
-    }
-
-    async function tryStartOrResume() {
-      const ahead = bufferedAheadSeconds(video);
-
-      if (ahead >= MIN_BUFFER_SECONDS) {
-        waitingForBuffer = false;
-        try {
-          await video.play();
-        } catch {
-          // Autoplay may be blocked; user gesture needed in some cases
-        }
-      } else {
-        waitingForBuffer = true;
-      }
-    }
-
-    // Initial attempt (some browsers require JS play())
-    window.addEventListener('load', () => {
-      // On some browsers you can keep autoplay attribute; here we do JS play for reliability
-      tryStartOrResume();
-    });
-
-    // When enough data loads, try again
-    video.addEventListener('progress', () => {
-      if (waitingForBuffer) tryStartOrResume();
-    });
-
-    // If playback stalls, wait for buffer to refill then resume
-    video.addEventListener('waiting', () => {
-      waitingForBuffer = true;
-      // Hide during stalls to avoid “stutter” showing a frozen frame (optional)
-      video.classList.remove('ready');
-    });
-
-    // Playback started; reveal it
-    video.addEventListener('playing', () => {
-      video.classList.add('ready');
-      waitingForBuffer = false;
-    });
-
-    // If the browser pauses due to buffering or other reasons, try to recover
-    video.addEventListener('pause', () => {
-      // If user didn't manually pause, attempt resume when buffer allows
-      if (!video.ended) tryStartOrResume();
-    });
-
-    // If the user clicks/taps anywhere, try to start (covers strict autoplay environments)
-    document.addEventListener('click', () => {
-      tryStartOrResume();
-    }, { once: true });
-  </script>
 </body>
 </html>
