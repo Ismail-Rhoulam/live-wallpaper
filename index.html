@@ -6,68 +6,89 @@
   <title>YouTube Wallpaper</title>
 
   <style>
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      background: black;
-      overflow: hidden;
+    html, body { margin:0; width:100%; height:100%; background:#000; overflow:hidden; }
+    .bg { position:fixed; inset:0; overflow:hidden; background:#000; }
+
+    /* cover */
+    #player {
+      position:absolute;
+      top:50%; left:50%;
+      transform:translate(-50%, -50%);
+      width:177.78vh; height:100vh;
+      min-width:100vw; min-height:56.25vw;
+      pointer-events:none;
     }
 
-    /* Container that behaves like object-fit: cover */
-    .bg {
-      position: fixed;
-      inset: 0;
-      overflow: hidden;
-      background: black;
-    }
-
-    /* Oversized iframe to fully cover viewport */
-    .bg iframe {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 177.78vh;       /* 16 / 9 * 100vh */
-      height: 100vh;
-      min-width: 100vw;
-      min-height: 56.25vw;   /* 9 / 16 * 100vw */
-      border: 0;
-      pointer-events: none; /* prevent clicks opening YouTube */
-    }
-
-    /* Optional dark overlay */
-    .shade {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.1);
-      pointer-events: none;
-    }
+    /* optional: hide until playing */
+    .hidden { opacity:0; transition:opacity .25s ease; }
+    .shown  { opacity:1; }
   </style>
 </head>
 <body>
-
   <div class="bg">
-    <iframe
-      title="YouTube background"
-      src="https://www.youtube-nocookie.com/embed/B6ZrAaGpsNI
-        ?autoplay=1
-        &mute=1
-        &controls=0
-        &playsinline=1
-        &loop=1
-        &playlist=B6ZrAaGpsNI
-        &modestbranding=1
-        &rel=0
-        &iv_load_policy=3
-        &disablekb=1"
-      allow="autoplay; encrypted-media; picture-in-picture"
-      referrerpolicy="strict-origin-when-cross-origin"
-      allowfullscreen>
-    </iframe>
+    <div id="player" class="hidden"></div>
   </div>
 
-  <div class="shade"></div>
+  <script>
+    const VIDEO_ID = "B6ZrAaGpsNI";
+    const ORIGIN = "https://YOUR_GH_PAGES_DOMAIN"; // e.g. https://username.github.io
 
+    // Load YouTube IFrame Player API
+    (function loadYT() {
+      const tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+    })();
+
+    let player;
+
+    window.onYouTubeIframeAPIReady = function () {
+      player = new YT.Player('player', {
+        videoId: VIDEO_ID,
+        host: 'https://www.youtube-nocookie.com',
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          playsinline: 1,
+          loop: 1,
+          playlist: VIDEO_ID,        // required for looping
+          mute: 1,                   // hint
+          modestbranding: 1,
+          rel: 0,
+          iv_load_policy: 3,
+          disablekb: 1,
+          origin: ORIGIN
+        },
+        events: {
+          onReady: (e) => {
+            try {
+              e.target.mute();        // the key to autoplay
+              e.target.playVideo();
+            } catch {}
+          },
+          onStateChange: (e) => {
+            // Reveal once actually playing
+            if (e.data === YT.PlayerState.PLAYING) {
+              const el = document.getElementById('player');
+              el.classList.remove('hidden');
+              el.classList.add('shown');
+            }
+            // Keep it looping even if YouTube decides to stop at end
+            if (e.data === YT.PlayerState.ENDED) {
+              e.target.seekTo(0);
+              e.target.playVideo();
+            }
+          }
+        }
+      });
+    };
+
+    // Fallback: user gesture unlock (some mobile browsers)
+    document.addEventListener('click', () => {
+      if (player && player.playVideo) {
+        try { player.mute(); player.playVideo(); } catch {}
+      }
+    }, { once: true });
+  </script>
 </body>
 </html>
