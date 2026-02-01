@@ -3,92 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>YouTube Wallpaper</title>
-
+  <title>Video Wallpaper</title>
   <style>
-    html, body { margin:0; width:100%; height:100%; background:#000; overflow:hidden; }
-    .bg { position:fixed; inset:0; overflow:hidden; background:#000; }
-
-    /* cover */
-    #player {
-      position:absolute;
-      top:50%; left:50%;
-      transform:translate(-50%, -50%);
-      width:177.78vh; height:100vh;
-      min-width:100vw; min-height:56.25vw;
-      pointer-events:none;
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
     }
-
-    /* optional: hide until playing */
-    .hidden { opacity:0; transition:opacity .25s ease; }
-    .shown  { opacity:1; }
+    video {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 177.78vh;  /* 16/9 * 100vh */
+      height: 100vh;
+      min-width: 100vw;
+      min-height: 56.25vw; /* 9/16 * 100vw */
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      display: block;
+      background: black;
+    }
   </style>
 </head>
 <body>
-  <div class="bg">
-    <div id="player" class="hidden"></div>
-  </div>
 
-  <script>
-    const VIDEO_ID = "B6ZrAaGpsNI";
-    const ORIGIN = "https://YOUR_GH_PAGES_DOMAIN"; // e.g. https://username.github.io
+  <video
+    id="bgvideo"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+  >
+    <source src="https://moewalls.com/wp-content/uploads/preview/2025/dark-queen-knight-preview.webm" type="video/webm">
+    Your browser does not support HTML5 video.
+  </video>
 
-    // Load YouTube IFrame Player API
-    (function loadYT() {
-      const tag = document.createElement('script');
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.head.appendChild(tag);
-    })();
-
-    let player;
-
-    window.onYouTubeIframeAPIReady = function () {
-      player = new YT.Player('player', {
-        videoId: VIDEO_ID,
-        host: 'https://www.youtube-nocookie.com',
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          playsinline: 1,
-          loop: 1,
-          playlist: VIDEO_ID,        // required for looping
-          mute: 1,                   // hint
-          modestbranding: 1,
-          rel: 0,
-          iv_load_policy: 3,
-          disablekb: 1,
-          origin: ORIGIN
-        },
-        events: {
-          onReady: (e) => {
-            try {
-              e.target.mute();        // the key to autoplay
-              e.target.playVideo();
-            } catch {}
-          },
-          onStateChange: (e) => {
-            // Reveal once actually playing
-            if (e.data === YT.PlayerState.PLAYING) {
-              const el = document.getElementById('player');
-              el.classList.remove('hidden');
-              el.classList.add('shown');
-            }
-            // Keep it looping even if YouTube decides to stop at end
-            if (e.data === YT.PlayerState.ENDED) {
-              e.target.seekTo(0);
-              e.target.playVideo();
-            }
-          }
-        }
-      });
-    };
-
-    // Fallback: user gesture unlock (some mobile browsers)
-    document.addEventListener('click', () => {
-      if (player && player.playVideo) {
-        try { player.mute(); player.playVideo(); } catch {}
-      }
-    }, { once: true });
-  </script>
 </body>
 </html>
